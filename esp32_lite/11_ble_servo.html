@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ESP32 Servo</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>ESP32 Servo</h1>
+    <button id="connectButton">Connect</button>
+    <p><input id="sliderControl" type="range" min="10" max="170"></p>
+    <p><span id="statusField">Disconnected</span></p>
+
+
+</body>
+<script>
+    // Parts of UI
+    const connectButton = document.getElementById('connectButton');
+    const sliderControl = document.getElementById('sliderControl');
+    const statusFieldContainer = document.getElementById('statusField');
+
+
+    // BLE Parameters
+    const deviceName ='ESP32 Servo';
+    const bleService = 'd6cf5b08-10d8-4ac5-a1e5-14f04c436bf7';
+    const servoCharacteristic= '66d97a32-c887-4b93-87f9-98013aa2e964';
+
+    // Global Variables
+    var bleServer;
+    var bleServiceFound;
+    var servoCharacteristicFound;
+
+    function onDisconnected(event){
+        console.log('Device Disconnected:', event.target.device.name);
+        statusFieldContainer.innerHTML = "Device disconnected";
+        connectToDevice(); // try and reconnect automatically
+    }
+
+    sliderControl.addEventListener('input', (event) => {
+        angle = sliderControl.value;
+        set_servo_angle(angle)
+    });
+
+    connectButton.addEventListener('click', (event) => {
+        if (!navigator.bluetooth) {
+            alert('Web Bluetooth API is not available in this browser! Try Google Chrome.');
+        }
+        else {
+            connectToDevice();
+        }
+    });
+
+    // Connect to BLE Device
+    function connectToDevice(){
+        console.log('Initializing Bluetooth...');
+        navigator.bluetooth.requestDevice({
+            filters: [{name: deviceName}],
+            optionalServices: [bleService]
+        })
+        .then(device => {
+            console.log('Device Selected:', device.name);
+            statusFieldContainer.innerHTML = 'Connected to: ' + device.name;
+            device.addEventListener('gattservicedisconnected', onDisconnected);
+            return device.gatt.connect();
+        })
+        .then(gattServer => {
+            bleServer = gattServer;
+            console.log("Connected to GATT Server");
+            return bleServer.getPrimaryService(bleService);
+        })
+        .then(service => {
+            bleServiceFound = service;
+            console.log("Service discovered:", service.uuid);
+            return service.getCharacteristic(servoCharacteristic);
+        })
+        .then(characteristic => {
+            //alert("Characteristic discovered:", characteristic.uuid);
+            servoCharacteristicFound = characteristic;
+        })
+        .catch(error => {
+            console.log('Error: ' + error);
+        })
+    }
+
+    function set_servo_angle(angle){
+        if (bleServer && bleServer.connected) {
+            bleServiceFound.getCharacteristic(servoCharacteristic)
+            .then(characteristic => {
+                //alert("Found the servo characteristic: ", characteristic.uuid);
+                const data = new Uint8Array([angle]);
+                return characteristic.writeValue(data);
+            })
+            .catch(error => {
+                console.log("Error writing to the Servo characteristic: " + error);
+            });
+        } else {
+            console.error ("Bluetooth is not connected. Cannot write to characteristic.")
+            window.alert("Bluetooth is not connected. Cannot write to characteristic. \n Connect to BLE first!")
+        }
+    }
+
+
+</script>
+</html>
