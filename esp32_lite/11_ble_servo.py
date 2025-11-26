@@ -5,8 +5,8 @@ import struct
 from machine import PWM, Pin
 
 SERVICE_NAME = "ESP32 Servo"
-SERVICE_UUID = bluetooth.UUID('19b10000-e8f2-537e-4f6c-d104768a1214') 
-SERVO_UUID = bluetooth.UUID('19b10002-e8f2-537e-4f6c-d104768a1214')
+SERVICE_UUID = bluetooth.UUID('d6cf5b08-10d8-4ac5-a1e5-14f04c436bf7') 
+SERVO_UUID = bluetooth.UUID('66d97a32-c887-4b93-87f9-98013aa2e964')
 ADVERTISING_INTERVAL_MICROS = 100000
 
 ble_service = aioble.Service(SERVICE_UUID)
