@@ -17,7 +17,7 @@ def show_time():
     oled.fill(0)
     draw_face()
     dt = localtime()
-    hour, minute, second = dt[4], dt[5], dt[6]
+    hour, minute, second = dt[3], dt[4], dt[5]
     draw_hand((hour + minute / 60) * 5, 16)
     draw_hand(minute + second / 60, 20)
     draw_hand(second, 25)

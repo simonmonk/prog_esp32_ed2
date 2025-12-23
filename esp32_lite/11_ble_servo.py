@@ -39,7 +39,6 @@ async def wait_for_servo_angle():
             angle = decode_data(data)
             print('Angle: ', angle)
             set_angle(angle)
-            # todo set servo angle foir real
         except Exception as e:
             print("Error in peripheral_task:", e)
         finally:
