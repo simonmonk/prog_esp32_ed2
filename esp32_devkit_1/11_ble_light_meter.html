@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ESP32 Light Meter</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>ESP32 Light Meter</h1>
+    <button id="connectButton">Connect</button>
+    <p><span id="statusField">Disconnected</span></p>
+    <h2><span id="valueField">-</span></h2>
+</body>
+<script>
+    // Parts of UI
+    const connectButton = document.getElementById('connectButton');
+    const retrievedValue = document.getElementById('valueField');
+    const statusFieldContainer = document.getElementById('statusField');
+
+    // BLE Parameters
+    const deviceName ='ESP32 Lightmeter';
+    const bleService = 'c3fc429a-9b4a-4f9f-bc3c-8916a35eeb26';
+    const sensorCharacteristic= 'b71e4aab-b0f9-446a-8072-4a1bdd47e0c0';
+
+    // Global Variables
+    var bleServer;
+    var bleServiceFound;
+    var sensorCharacteristicFound;
+
+    function onDisconnected(event){
+        console.log('Device Disconnected:', event.target.device.name);
+        statusFieldContainer.innerHTML = "Device disconnected";
+        connectToDevice(); // try and reconnect automatically
+    }
+
+    function handleNewLightReading(event){
+        const newValueReceived = new TextDecoder().decode(event.target.value);
+        console.log("Characteristic value changed: ", newValueReceived);
+        retrievedValue.innerHTML = newValueReceived;
+        timestampContainer.innerHTML = getDateTime();
+    }
+
+    connectButton.addEventListener('click', (event) => {
+        if (!navigator.bluetooth) {
+            alert('Web Bluetooth API is not available in this browser! Try Google Chrome.');
+        }
+        else {
+            connectToDevice();
+        }
+    });
+
+    // Connect to BLE Device
+    function connectToDevice(){
+        console.log('Initializing Bluetooth...');
+        navigator.bluetooth.requestDevice({
+            filters: [{name: deviceName}],
+            optionalServices: [bleService]
+        })
+        .then(device => {
+            console.log('Device Selected:', device.name);
+            statusFieldContainer.innerHTML = 'Connected to: ' + device.name;
+            device.addEventListener('gattservicedisconnected', onDisconnected);
+            return device.gatt.connect();
+        })
+        .then(gattServer => {
+            bleServer = gattServer;
+            console.log("Connected to GATT Server");
+            return bleServer.getPrimaryService(bleService);
+        })
+        .then(service => {
+            bleServiceFound = service;
+            console.log("Service discovered:", service.uuid);
+            return service.getCharacteristic(sensorCharacteristic);
+        })
+        .then(characteristic => {
+            console.log("Characteristic discovered:", characteristic.uuid);
+            sensorCharacteristicFound = characteristic;
+            characteristic.addEventListener('characteristicvaluechanged', handleNewLightReading);
+            characteristic.startNotifications();
+            console.log("Notifications Started.");
+            return characteristic.readValue();
+        })
+        .then(value => {
+            console.log("Read value: ", value);
+            const decodedValue = new TextDecoder().decode(value);
+            console.log("Decoded value: ", decodedValue);
+            retrievedValue.innerHTML = decodedValue;            
+        })
+        .catch(error => {
+            console.log('Error: ', error);
+        })
+    }
+
+</script>
+</html>
