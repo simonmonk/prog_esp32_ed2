@@ -30,26 +30,7 @@ index_page = '''
 </script>
 </head>
 
-<body>ssid = 'network'      # CHANGE ME
-password = 'password' # CHANGE ME
-
-index_page = '''
-<!DOCTYPE html>
-<html>
-<head>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script> 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/justgage/1.6.1/justgage.min.js"></script>
-  <script>
-  function callback(lightStr, status){
-    if (status == "success") {
-      light = parseFloat(lightStr).toFixed(2);
-      g.refresh(light);
-      setTimeout(getReading, 1000);
-    }
-    else {
-      alert("There was a problem");
-    }
+<body>
 <h1>Light Level (Percent)</h1>
 <div id="gauge" class="200x160px"></div>
 
